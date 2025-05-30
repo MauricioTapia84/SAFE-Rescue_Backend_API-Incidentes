@@ -105,6 +105,22 @@ public class IncidenteService {
         try {
             actualizarRelaciones(incidente, incidenteExistente);
 
+            if (incidente.getTitulo() != null) {
+                if (incidente.getTitulo().length() > 50) {
+                    throw new RuntimeException("El Titulo no puede exceder 50 caracteres");
+                }else{
+                    incidenteExistente.setTitulo(incidente.getTitulo());
+                }
+            }
+
+            if (incidente.getDetalle() != null) {
+                if (incidente.getDetalle().length() > 400) {
+                    throw new RuntimeException("El detalle no puede exceder 400 caracteres");
+                }else{
+                    incidenteExistente.setDetalle(incidente.getDetalle());
+                }
+            }
+
             // Actualizar recursos asociados
             if (incidente.getEstadoIncidente() != null) {
                 asignarEstadoIncidente(Long.valueOf(incidente.getId()),Long.valueOf(incidente.getEstadoIncidente().getId()));
@@ -131,7 +147,6 @@ public class IncidenteService {
                 incidenteExistente.setUbicacion(incidente.getUbicacion());
             }
 
-            validarIncidente(incidenteExistente);
             return incidenteRepository.save(incidenteExistente);
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar incidente: " + e.getMessage(), e);

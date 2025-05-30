@@ -68,10 +68,14 @@ public class TipoIncidenteService {
         TipoIncidente tipoExistente = tipoIncidenteRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Tipo de incidente no encontrado con ID: " + id));
 
+
         if (tipoIncidente.getNombre() != null) {
-            tipoExistente.setNombre(tipoIncidente.getNombre());
+            if (tipoIncidente.getNombre().length() > 50) {
+                throw new RuntimeException("El nombre no puede exceder 50 caracteres");
+            }else{
+                tipoExistente.setNombre(tipoIncidente.getNombre());
+            }
         }
-        validarTipoIncidente(tipoIncidente);
 
         return tipoIncidenteRepository.save(tipoExistente);
     }

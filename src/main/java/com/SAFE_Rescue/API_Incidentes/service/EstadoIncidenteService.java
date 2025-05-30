@@ -76,8 +76,9 @@ public class EstadoIncidenteService {
             if (estadoIncidente.getNombre() != null) {
                 if (estadoIncidente.getNombre().length() > 50) {
                     throw new RuntimeException("El valor detalle excede máximo de caracteres (50)");
+                }else{
+                    antiguoEstado.setNombre(estadoIncidente.getNombre());
                 }
-                antiguoEstado.setNombre(estadoIncidente.getNombre());
             }
 
             return estadoIncidenteRepository.save(antiguoEstado);

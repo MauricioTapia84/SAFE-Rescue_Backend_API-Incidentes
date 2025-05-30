@@ -103,9 +103,19 @@ public class IncidenteController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarIncidente(@PathVariable long id) {
-
-        incidenteService.delete(id);
-        return ResponseEntity.ok("Incidente eliminado con éxito.");
+        try {
+            incidenteService.delete(id);
+            return ResponseEntity.ok("Incidente eliminado con éxito.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Incidente no encontrado");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor.");
+        }
     }
 
 
@@ -117,7 +127,7 @@ public class IncidenteController {
      * @param ciudadanoId del ciudadano
      * @return ResponseEntity con mensaje de confirmación o error
      */
-    @PostMapping("/{incidenteId}/asignar-ciudadano/{equipoId}")
+    @PostMapping("/{incidenteId}/asignar-ciudadano/{ciudadanoId}")
     public ResponseEntity<String> asignacCiudadano(@PathVariable Long incidenteId, @PathVariable int ciudadanoId) {
         try {
             incidenteService.asignarCiudadano(incidenteId,ciudadanoId);

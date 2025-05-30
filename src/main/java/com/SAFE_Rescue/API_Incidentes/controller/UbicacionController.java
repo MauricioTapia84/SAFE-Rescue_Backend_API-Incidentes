@@ -100,8 +100,19 @@ public class UbicacionController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarUbicacion(@PathVariable long id) {
-        ubicacionService.delete(id);
-        return ResponseEntity.ok("Ubicacion eliminada con éxito.");
+        try {
+            ubicacionService.delete(id);
+            return ResponseEntity.ok("Ubicacion eliminada con éxito.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ubicacion no encontrada");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor.");
+        }
     }
 
 

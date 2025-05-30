@@ -74,22 +74,36 @@ public class UbicacionService {
         Ubicacion antiguaUbicacion = ubicacionRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Ubicacion no encontrada con ID: " + id));
 
-        validarUbicacion(ubicacion);
-
         if (ubicacion.getCalle() != null) {
-            antiguaUbicacion.setCalle(ubicacion.getCalle());
+            if (ubicacion.getCalle().length() > 50) {
+                throw new RuntimeException("El nombre no puede exceder 50 caracteres");
+            }else{
+                antiguaUbicacion.setCalle(ubicacion.getCalle());
+            }
         }
 
         if (ubicacion.getNumeracion() != 0) {
-            antiguaUbicacion.setNumeracion(ubicacion.getNumeracion());
+            if (String.valueOf(ubicacion.getNumeracion()).length()> 5) {
+                throw new RuntimeException("El valor de la Numeración excede máximo de caracteres (5)");
+            }else{
+                antiguaUbicacion.setNumeracion(ubicacion.getNumeracion());
+            }
         }
 
         if (ubicacion.getComuna() != null) {
-            antiguaUbicacion.setComuna(ubicacion.getComuna());
+            if (ubicacion.getComuna().length() > 50) {
+                throw new RuntimeException("La comuna no puede exceder 50 caracteres");
+            }else{
+                antiguaUbicacion.setComuna(ubicacion.getComuna());
+            }
         }
 
         if (ubicacion.getRegion() != null) {
-            antiguaUbicacion.setRegion(ubicacion.getRegion());
+            if (ubicacion.getRegion().length() > 50) {
+                throw new RuntimeException("La region no puede exceder 50 caracteres");
+            }else{
+                antiguaUbicacion.setRegion(ubicacion.getRegion());
+            }
         }
 
         return ubicacionRepository.save(antiguaUbicacion);

@@ -98,7 +98,18 @@ public class EstadoIncidenteController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> eliminarEstadoIncidente(@PathVariable long id) {
-        estadoIncidenteService.delete(id);
-        return ResponseEntity.ok("Estado Incidente eliminado con éxito.");
+        try {
+            estadoIncidenteService.delete(id);
+            return ResponseEntity.ok("Estado Incidente eliminado con éxito.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Estado Incidente no encontrado");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor.");
+        }
     }
 }
