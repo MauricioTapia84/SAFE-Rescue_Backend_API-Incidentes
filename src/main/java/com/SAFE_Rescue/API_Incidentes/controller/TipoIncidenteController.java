@@ -11,22 +11,22 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Controlador REST para la gestión de tipos de equipo de emergencia.
- * Proporciona endpoints para operaciones CRUD de tipos de equipo.
+ * Controlador REST para la gestión de tipos de Incidente de emergencia.
+ * Proporciona endpoints para operaciones CRUD de tipos de Incidente.
  */
 @RestController
-@RequestMapping("/api-turnos/v1/tipos-equipo")
+@RequestMapping("/api-incidente/v1/tipos-incidentes")
 public class TipoIncidenteController {
 
     @Autowired
     private TipoIncidenteService tipoIncidenteService;
 
     /**
-     * Obtiene todos los tipos de equipo registrados en el sistema.
-     * @return ResponseEntity con lista de tipos de equipo o estado NO_CONTENT si no hay registros
+     * Obtiene todos los tipos de incidente registrados en el sistema.
+     * @return ResponseEntity con lista de tipos de incidente o estado NO_CONTENT si no hay registros
      */
     @GetMapping
-    public ResponseEntity<List<TipoIncidente>> listarTiposEquipo() {
+    public ResponseEntity<List<TipoIncidente>> listarTiposIncidente() {
         List<TipoIncidente> tipoIncidente = tipoIncidenteService.findAll();
         if(tipoIncidente.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -35,12 +35,12 @@ public class TipoIncidenteController {
     }
 
     /**
-     * Busca un tipo de equipo por su ID.
-     * @param id ID del tipo de equipo a buscar
-     * @return ResponseEntity con el tipo de equipo encontrado o mensaje de error
+     * Busca un tipo de incidente por su ID.
+     * @param id ID del tipo de incidente a buscar
+     * @return ResponseEntity con el tipo de incidente encontrado o mensaje de error
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarTipoEquipo(@PathVariable int id) {
+    public ResponseEntity<?> buscarTipoIncidente(@PathVariable int id) {
         TipoIncidente tipoIncidente;
         try {
             tipoIncidente = tipoIncidenteService.findByID(id);
@@ -51,12 +51,12 @@ public class TipoIncidenteController {
     }
 
     /**
-     * Crea un nuevo tipo de equipo.
-     * @param tipoIncidente Datos del tipo de equipo a crear
+     * Crea un nuevo tipo de incidente.
+     * @param tipoIncidente Datos del tipo de incidente a crear
      * @return ResponseEntity con mensaje de confirmación o error
      */
     @PostMapping
-    public ResponseEntity<String> agregarTipoEquipo(@RequestBody TipoIncidente tipoIncidente) {
+    public ResponseEntity<String> agregarTipoIncidente(@RequestBody TipoIncidente tipoIncidente) {
         try {
             tipoIncidenteService.save(tipoIncidente);
             return ResponseEntity.status(HttpStatus.CREATED).body("Tipo Incidente creado con éxito.");
@@ -68,13 +68,13 @@ public class TipoIncidenteController {
     }
 
     /**
-     * Actualiza un tipo de equipo existente.
-     * @param id ID del tipo de equipo a actualizar
-     * @param tipoIncidente Datos actualizados del tipo de equipo
+     * Actualiza un tipo de incidente existente.
+     * @param id ID del tipo de incidente a actualizar
+     * @param tipoIncidente Datos actualizados del tipo de incidente
      * @return ResponseEntity con mensaje de confirmación o error
      */
     @PutMapping("/{id}")
-    public ResponseEntity<String> actualizarTipoEquipo(@PathVariable long id, @RequestBody TipoIncidente tipoIncidente) {
+    public ResponseEntity<String> actualizarTipoIncidente(@PathVariable long id, @RequestBody TipoIncidente tipoIncidente) {
         try {
             TipoIncidente nuevoTipoIncidente = tipoIncidenteService.update(tipoIncidente, id);
             return ResponseEntity.ok("Actualizado con éxito");
@@ -91,12 +91,12 @@ public class TipoIncidenteController {
     }
 
     /**
-     * Elimina un tipo de equipo del sistema.
-     * @param id ID del tipo de equipo a eliminar
+     * Elimina un tipo de incidente del sistema.
+     * @param id ID del tipo de incidente a eliminar
      * @return ResponseEntity con mensaje de confirmación
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> eliminarTipoEquipo(@PathVariable long id) {
+    public ResponseEntity<String> eliminarTipoIncidente(@PathVariable long id) {
         tipoIncidenteService.delete(id);
         return ResponseEntity.ok("Tipo Incidente eliminado con éxito.");
     }

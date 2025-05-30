@@ -11,22 +11,22 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Controlador REST para la gestión de compañías de bomberos.
- * Proporciona endpoints para operaciones CRUD de compañías.
+ * Controlador REST para la gestión de ubicaciones
+ * Proporciona endpoints para operaciones CRUD de ubicaciones
  */
 @RestController
-@RequestMapping("/api-turnos/v1/companias")
-public class CompaniaController {
+@RequestMapping("/api-incidente/v1/ubicaciones")
+public class UbicacionController {
 
     @Autowired
     private UbicacionService ubicacionService;
 
     /**
-     * Obtiene todas las compañías registradas en el sistema.
-     * @return ResponseEntity con lista de compañías o estado NO_CONTENT si no hay registros
+     * Obtiene todas las ubicaciones registradas en el sistema.
+     * @return ResponseEntity con lista de ubicaciones o estado NO_CONTENT si no hay registros
      */
     @GetMapping
-    public ResponseEntity<List<Ubicacion>> listarCompania(){
+    public ResponseEntity<List<Ubicacion>> listarUbicaiones(){
 
         List<Ubicacion> ubicacion = ubicacionService.findAll();
         if(ubicacion.isEmpty()){
@@ -36,12 +36,12 @@ public class CompaniaController {
     }
 
     /**
-     * Busca una compañía por su ID.
-     * @param id ID de la compañía a buscar
-     * @return ResponseEntity con la compañía encontrada o mensaje de error
+     * Busca una Ubicacion por su ID.
+     * @param id ID de la Ubicacion a buscar
+     * @return ResponseEntity con la Ubicacion encontrada o mensaje de error
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarCompania(@PathVariable int id) {
+    public ResponseEntity<?> buscarUbicacion(@PathVariable int id) {
         Ubicacion ubicacion;
 
         try {
@@ -54,12 +54,12 @@ public class CompaniaController {
     }
 
     /**
-     * Crea una nueva compañía.
-     * @param ubicacion Datos de la compañía a crear
+     * Crea una nueva Ubicacion
+     * @param ubicacion Datos de la Ubicacion a crear
      * @return ResponseEntity con mensaje de confirmación o error
      */
     @PostMapping
-    public ResponseEntity<String> agregarCompania(@RequestBody Ubicacion ubicacion) {
+    public ResponseEntity<String> agregarUbicacion(@RequestBody Ubicacion ubicacion) {
         try {
             ubicacionService.save(ubicacion);
             return ResponseEntity.status(HttpStatus.CREATED).body("Ubicacion creada con éxito.");
@@ -71,13 +71,13 @@ public class CompaniaController {
     }
 
     /**
-     * Actualiza una compañía existente.
-     * @param id ID de la compañía a actualizar
-     * @param ubicacion Datos actualizados de la compañía
+     * Actualiza una Ubicacion existente.
+     * @param id ID de la Ubicacion a actualizar
+     * @param ubicacion Datos actualizados de la Ubicacion
      * @return ResponseEntity con mensaje de confirmación o error
      */
     @PutMapping("/{id}")
-    public ResponseEntity<String> actualizarCompania(@PathVariable long id, @RequestBody Ubicacion ubicacion) {
+    public ResponseEntity<String> actualizarUbicacion(@PathVariable long id, @RequestBody Ubicacion ubicacion) {
         try {
             Ubicacion nuevoUbicacion = ubicacionService.update(ubicacion, id);
             return ResponseEntity.ok("Actualizado con éxito");
@@ -94,29 +94,15 @@ public class CompaniaController {
     }
 
     /**
-     * Elimina una compañía del sistema.
-     * @param id ID de la compañía a eliminar
+     * Elimina una Ubicacion del sistema.
+     * @param id ID de la Ubicacion a eliminar
      * @return ResponseEntity con mensaje de confirmación
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> eliminarCompania(@PathVariable long id) {
+    public ResponseEntity<String> eliminarUbicacion(@PathVariable long id) {
         ubicacionService.delete(id);
         return ResponseEntity.ok("Ubicacion eliminada con éxito.");
     }
 
-    /**
-     * Asigna una ubicacion a una compania.
-     * @param companiaId ID de la Ubicacion
-     * @param ubicacionId ID de la Ubicaion
-     * @return ResponseEntity con mensaje de confirmación o error
-     */
-    @PostMapping("/{companiaId}/asignar-ubicacion/{ubicacionId}")
-    public ResponseEntity<String> asignarUbicacion(@PathVariable Long companiaId, @PathVariable Long ubicacionId) {
-        try {
-            ubicacionService.asignarUbicacion(companiaId, ubicacionId);
-            return ResponseEntity.ok("Ubicacion1 asignada a la Ubicacion exitosamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
+
 }

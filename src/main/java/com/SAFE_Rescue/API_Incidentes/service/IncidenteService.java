@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Servicio para la gestión integral de equipos de emergencia.
+ * Servicio para la gestión integral de Incidente de emergencia.
  * Maneja operaciones CRUD, asignación de recursos y personal,
- * y validación de datos para equipos de rescate.
+ * y validación de datos para Incidente de rescate.
  */
 @Service
 @Transactional
@@ -23,11 +23,10 @@ public class IncidenteService {
 
     // REPOSITORIOS INYECTADOS
     @Autowired private IncidenteRepository incidenteRepository;
+    @Autowired private UbicacionRepository UbicacionRepository;
     @Autowired private CiudadanoRepository ciudadanoRepository;
-    @Autowired private CompaniaRepository companiaRepository;
     @Autowired private TipoIncidenteRepository tipoIncidenteRepository;
     @Autowired private EquipoRepository equipoRepository;
-    @Autowired private RecursoRepository recursoRepository;
     @Autowired private EstadoIncidenteRepository estadoIncidenteRepository;
 
     // SERVICIOS INYECTADOS
@@ -35,26 +34,25 @@ public class IncidenteService {
     @Autowired private UbicacionService ubicacionService;
     @Autowired private TipoIncidenteService tipoIncidenteService;
 
-
     // MÉTODOS CRUD PRINCIPALES
 
     /**
-     * Obtiene todos los equipos registrados en el sistema.
-     * @return Lista completa de equipos
+     * Obtiene todos los Incidentes registrados en el sistema.
+     * @return Lista completa de Incidentes
      */
     public List<Incidente> findAll() {
         return incidenteRepository.findAll();
     }
 
     /**
-     * Busca un equipo por su ID único.
-     * @param id Identificador del equipo
+     * Busca un Incidente por su ID único.
+     * @param id Identificador del Incidente
      * @return Incidente encontrado
      * @throws NoSuchElementException Si no se encuentra el equipo
      */
     public Incidente findByID(long id) {
         return incidenteRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("No se encontró equipo con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("No se encontró Incidente con ID: " + id));
     }
 
     /**
@@ -67,20 +65,19 @@ public class IncidenteService {
     public Incidente save(Incidente incidente) {
         try {
             // Validación y persistencia de relaciones principales
-            Equipo equipoGuardado = estadoIncidenteService.save(incidente.getEquipo());
+            Ciudadano ciudadanoGuardado = ciudadanoRepository.save(incidente.getCiudadano());
+            Equipo equipoGuardado = equipoRepository.save(incidente.getEquipo());
+            EstadoIncidente estadoIncidenteGuardado = estadoIncidenteService.save(incidente.getEstadoIncidente());
             Ubicacion ubicacionGuardada = ubicacionService.save(incidente.getUbicacion());
             TipoIncidente tipoIncidenteGuardado = tipoIncidenteService.save(incidente.getTipoIncidente());
 
             incidente.setEquipo(equipoGuardado);
             incidente.setUbicacion(ubicacionGuardada);
             incidente.setTipoIncidente(tipoIncidenteGuardado);
+            incidente.setCiudadano(ciudadanoGuardado);
+            incidente.setEstadoIncidente(estadoIncidenteGuardado);
 
-            // Asignación de recursos asociados
-            asignarVehiculosAlEquipo(incidente);
-            asignarBomberosAlEquipo(incidente);
-            asignarRecursosAlEquipo(incidente);
-
-            validarEquipo(incidente);
+            validarIncidente(incidente);
 
             return incidenteRepository.save(incidente);
         } catch (Exception e) {
@@ -109,22 +106,32 @@ public class IncidenteService {
             actualizarRelaciones(incidente, incidenteExistente);
 
             // Actualizar recursos asociados
-            if (incidente.getEstadoIncidentes() != null) {
-                asignarVehiculosAlEquipo(incidente);
-                incidenteExistente.setEstadoIncidentes(incidente.getEstadoIncidentes());
+            if (incidente.getEstadoIncidente() != null) {
+                asignarEstadoIncidente(Long.valueOf(incidente.getId()),Long.valueOf(incidente.getEstadoIncidente().getId()));
+                incidenteExistente.setEstadoIncidente(incidente.getEstadoIncidente());
             }
 
-            if (incidente.getPersonal() != null) {
-                asignarBomberosAlEquipo(incidente);
-                incidenteExistente.setPersonal(incidente.getPersonal());
+            if (incidente.getEquipo() != null) {
+                asignarEquipo(Long.valueOf(incidente.getId()),Long.valueOf(incidente.getEquipo().getId()));
+                incidenteExistente.setEquipo(incidente.getEquipo());
             }
 
-            if (incidente.getRecursos() != null) {
-                asignarRecursosAlEquipo(incidente);
-                incidenteExistente.setRecursos(incidente.getRecursos());
+            if (incidente.getCiudadano() != null) {
+                asignarCiudadano(Long.valueOf(incidente.getId()),Long.valueOf(incidente.getCiudadano().getId()));
+                incidenteExistente.setCiudadano(incidente.getCiudadano());
             }
 
-            validarEquipo(incidenteExistente);
+            if (incidente.getTipoIncidente() != null) {
+                asignarTipoIncidente(Long.valueOf(incidente.getId()),Long.valueOf(incidente.getTipoIncidente().getId()));
+                incidenteExistente.setTipoIncidente(incidente.getTipoIncidente());
+            }
+
+            if (incidente.getUbicacion() != null) {
+                asignarUbicacion(Long.valueOf(incidente.getId()),Long.valueOf(incidente.getUbicacion().getId()));
+                incidenteExistente.setUbicacion(incidente.getUbicacion());
+            }
+
+            validarIncidente(incidenteExistente);
             return incidenteRepository.save(incidenteExistente);
         } catch (Exception e) {
             throw new RuntimeException("Error al actualizar incidente: " + e.getMessage(), e);
@@ -132,13 +139,13 @@ public class IncidenteService {
     }
 
     /**
-     * Elimina un equipo del sistema.
-     * @param id Identificador del equipo a eliminar
-     * @throws NoSuchElementException Si no se encuentra el equipo
+     * Elimina un incidente del sistema.
+     * @param id Identificador del incidente a eliminar
+     * @throws NoSuchElementException Si no se encuentra el incidente
      */
     public void delete(long id) {
         if (!incidenteRepository.existsById(id)) {
-            throw new NoSuchElementException("No se encontró equipo con ID: " + id);
+            throw new NoSuchElementException("No se encontró incidente con ID: " + id);
         }
         incidenteRepository.deleteById(id);
     }
@@ -146,41 +153,55 @@ public class IncidenteService {
     // MÉTODOS DE ASIGNACIÓN DE RELACIONES
 
     /**
-     * Asigna una compañía a un equipo.
-     * @param equipoId ID del equipo
-     * @param companiaId ID de la compañía
+     * Asigna una Ciudadano a un incidente.
+     * @param incidenteId ID del incidente
+     * @param ciudadanoId ID de la incidente
      */
-    public void asignarCompania(long equipoId, long companiaId) {
-        Incidente incidente = incidenteRepository.findById(equipoId)
+    public void asignarCiudadano(long incidenteId, long ciudadanoId) {
+        Incidente incidente = incidenteRepository.findById(incidenteId)
             .orElseThrow(() -> new RuntimeException("Incidente no encontrado"));
-        Ubicacion ubicacion = companiaRepository.findById(companiaId)
-            .orElseThrow(() -> new RuntimeException("Ubicacion no encontrada"));
-        incidente.setUbicacion(ubicacion);
+        Ciudadano ciudadano = ciudadanoRepository.findById(ciudadanoId)
+            .orElseThrow(() -> new RuntimeException("Ciudadano no encontrado"));
+        incidente.setCiudadano(ciudadano);
         incidenteRepository.save(incidente);
 
     }
 
     /**
-     * Asigna un tipo de equipo a un equipo.
-     * @param equipoId ID del equipo
-     * @param tipoEquipoId ID del tipo de equipo
+     * Asigna un tipo de incidente a un incidente.
+     * @param incidenteId ID del incidente
+     * @param tipoIncidenteId ID del tipo de incidente
      */
-    public void asignarTipoEquipo(long equipoId, long tipoEquipoId) {
-        Incidente incidente = incidenteRepository.findById(equipoId)
+    public void asignarTipoIncidente(long incidenteId, long tipoIncidenteId) {
+        Incidente incidente = incidenteRepository.findById(incidenteId)
                 .orElseThrow(() -> new RuntimeException("Incidente no encontrado"));
-        TipoIncidente tipoIncidente = tipoIncidenteRepository.findById(equipoId)
+        TipoIncidente tipoIncidente = tipoIncidenteRepository.findById(tipoIncidenteId)
                 .orElseThrow(() -> new RuntimeException("Tipo Incidente no encontrado"));
         incidente.setTipoIncidente(tipoIncidente);
         incidenteRepository.save(incidente);
     }
 
     /**
-     * Asigna un turno a un equipo.
-     * @param equipoId ID del equipo
-     * @param turnoId ID del turno
+     * Asigna un Estado de incidente a un incidente.
+     * @param incidenteId ID del incidente
+     * @param estadoIncidenteId ID del Estado Incidente
      */
-    public void asignarTurno(long equipoId, long turnoId) {
-        Incidente incidente = incidenteRepository.findById(equipoId)
+    public void asignarEstadoIncidente(long incidenteId, long estadoIncidenteId) {
+        Incidente incidente = incidenteRepository.findById(incidenteId)
+                .orElseThrow(() -> new RuntimeException("Incidente no encontrado"));
+        EstadoIncidente estadoIncidente = estadoIncidenteRepository.findById(estadoIncidenteId)
+                .orElseThrow(() -> new RuntimeException("Estado Incidente no encontrado"));
+        incidente.setEstadoIncidente(estadoIncidente);
+        incidenteRepository.save(incidente);
+    }
+
+    /**
+     * Asigna un Equipo a un incidente.
+     * @param incidenteId ID del incidente
+     * @param equipoId ID del Equipo
+     */
+    public void asignarEquipo(long incidenteId, long equipoId) {
+        Incidente incidente = incidenteRepository.findById(incidenteId)
                 .orElseThrow(() -> new RuntimeException("Incidente no encontrado"));
         Equipo equipo = equipoRepository.findById(equipoId)
                 .orElseThrow(() -> new RuntimeException("Equipo no encontrado"));
@@ -189,82 +210,41 @@ public class IncidenteService {
     }
 
     /**
-     * Asigna una lista de bomberos a un equipo.
-     * @param equipoId ID del equipo
-     * @param bomberosIds Lista de IDs de bomberos
-     * @throws IllegalArgumentException Si la lista es nula o vacía
+     * Asigna un Ubicacion a un incidente.
+     * @param incidenteId ID del incidente
+     * @param ubicacionId ID del Ubicacion
      */
-    public void asignarListaBomberos(long equipoId, List<Long> bomberosIds) {
-        if (bomberosIds == null || bomberosIds.isEmpty()) {
-            throw new IllegalArgumentException("La lista de bomberos no puede estar vacía");
-        }
-
-        Incidente incidente = incidenteRepository.findById(equipoId)
-                .orElseThrow(() -> new RuntimeException("No se encontró incidente con ID: " + equipoId));
-
-        incidente.setPersonal(obtenerPersonal(bomberosIds));
+    public void asignarUbicacion(long incidenteId, long ubicacionId) {
+        Incidente incidente = incidenteRepository.findById(incidenteId)
+                .orElseThrow(() -> new RuntimeException("Incidente no encontrado"));
+        Ubicacion ubicacion = UbicacionRepository.findById(ubicacionId)
+                .orElseThrow(() -> new RuntimeException("Ubicacion no encontrado"));
+        incidente.setUbicacion(ubicacion);
         incidenteRepository.save(incidente);
     }
-    /**
-     * Asigna bomberos a un incidente obteniéndolos de la base de datos
-     * @param incidente Incidente al que se asignarán los bomberos
-     */
-    private void asignarBomberosAlEquipo(Incidente incidente) {
-        if (incidente.getPersonal() != null && !incidente.getPersonal().isEmpty()) {
-            List<Long> bomberosIds = extraerIdsDeBomberos(incidente.getPersonal());
-            incidente.setPersonal(obtenerPersonal(bomberosIds));
-        }
-    }
 
-    /**
-     * Asigna recursos a un incidente obteniéndolos de la base de datos
-     * @param incidente Incidente al que se asignarán los recursos
-     */
-    private void asignarRecursosAlEquipo(Incidente incidente) {
-        if (incidente.getRecursos() != null && !incidente.getRecursos().isEmpty()) {
-            List<Long> recursosIds = extraerIdsRecursos(incidente.getRecursos());
-            incidente.setRecursos(obtenerRecursos(recursosIds));
-        }
-    }
-
-    /**
-     * Asigna vehículos a un incidente obteniéndolos de la base de datos
-     * @param incidente Incidente al que se asignarán los vehículos
-     */
-    private void asignarVehiculosAlEquipo(Incidente incidente) {
-        if (incidente.getEstadoIncidentes() != null && !incidente.getEstadoIncidentes().isEmpty()) {
-            List<Long> vehiculosIds = extraerIdsVehiculos(incidente.getEstadoIncidentes());
-            incidente.setEstadoIncidentes(obtenerVehiculos(vehiculosIds));
-        }
-    }
 
     // MÉTODOS PRIVADOS DE VALIDACIÓN Y UTILIDADES
 
-    private void validarEquipo(Incidente incidente) {
+    private void validarIncidente(Incidente incidente) {
 
-        if (incidente.getNombre() != null) {
-            if (incidente.getNombre().length() > 50) {
-                throw new RuntimeException("El nombre no puede exceder 50 caracteres");
+        if (incidente.getTitulo() != null) {
+            if (incidente.getTitulo().length() > 50) {
+                throw new RuntimeException("El Titulo no puede exceder 50 caracteres");
             }
         }
 
-        if (incidente.getCantidadMiembros() != null) {
-            if (String.valueOf(incidente.getCantidadMiembros()).length()> 5) {
-                throw new RuntimeException("El valor de la Cantidad de miembros excede máximo de caracteres (2)");
-            }
-        }
-
-        if (incidente.getLider() != null) {
-            if (incidente.getLider().length() > 50) {
-                throw new RuntimeException("El nombre del líder no puede exceder 50 caracteres");
+        if (incidente.getDetalle() != null) {
+            if (incidente.getDetalle().length() > 400) {
+                throw new RuntimeException("El detalle no puede exceder 400 caracteres");
             }
         }
 
     }
 
     private void actualizarRelaciones(Incidente fuente, Incidente destino) {
-        if (fuente.getEquipo() != null) {
-            destino.setEquipo(estadoIncidenteService.save(fuente.getEquipo()));
+        if (fuente.getEstadoIncidente() != null) {
+            destino.setEstadoIncidente(estadoIncidenteService.save(fuente.getEstadoIncidente()));
         }
         if (fuente.getUbicacion() != null) {
             destino.setUbicacion(ubicacionService.save(fuente.getUbicacion()));
@@ -274,116 +254,6 @@ public class IncidenteService {
         }
     }
 
-
-    // MÉTODOS PARA CONSULTA
-
-    /**
-     * Obtiene información de bomberos desde la base de datos.
-     * @param bomberosIds Lista de IDs de bomberos
-     * @return Lista con información de bomberos
-     * @throws RuntimeException Si hay error en la comunicación
-     */
-    private List<Ciudadano> obtenerPersonal(List<Long> bomberosIds) {
-        if (bomberosIds == null || bomberosIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        try {
-            List<Ciudadano> ciudadanos = new ArrayList<>();
-            for (Long id : bomberosIds) {
-                Ciudadano ciudadano = ciudadanoRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Ciudadano no encontrado con ID: " + id));
-                ciudadanos.add(ciudadano);
-            }
-            return ciudadanos;
-        } catch (Exception e) {
-            throw new RuntimeException("Error al obtener lista de bomberos: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Obtiene información de vehículos desde base de datos
-     * @param vehiculosIds Lista de IDs de vehículos
-     * @return Lista con información de vehículos
-     * @throws RuntimeException Si hay error en la comunicación
-     */
-    private List<EstadoIncidente> obtenerVehiculos(List<Long> vehiculosIds) {
-        if (vehiculosIds == null || vehiculosIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        try {
-            List<EstadoIncidente> estadoIncidentes = new ArrayList<>();
-            for (int i =0;vehiculosIds.size()>i;i++) {
-                EstadoIncidente estadoIncidente = estadoIncidenteRepository.findById(vehiculosIds.get(i))
-                        .orElseThrow(() -> new RuntimeException("EstadoIncidente no encontrado"));
-                estadoIncidentes.add(estadoIncidente);
-            }
-            return estadoIncidentes;
-        } catch (Exception e) {
-            throw new RuntimeException("Error al obtener lista de vehículos: " + e.getMessage(), e);
-        }
-
-    }
-
-    /**
-     * Obtiene información de recursos desde base de datos
-     * @param recursosIds Lista de IDs de recursos
-     * @return Lista con información de recursos
-     * @throws RuntimeException Si hay error en la comunicación
-     */
-    private List<Recurso> obtenerRecursos(List<Long> recursosIds) {
-        if (recursosIds == null || recursosIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        try {
-            List<Recurso> recursos = new ArrayList<>();
-            for (int i =0;recursosIds.size()>i;i++) {
-                Recurso recurso = recursoRepository.findById(recursosIds.get(i))
-                        .orElseThrow(() -> new RuntimeException("Recurso no encontrado"));
-                recursos.add(recurso);
-            }
-            return recursos;
-        } catch (Exception e) {
-            throw new RuntimeException("Error al obtener lista de Recursos: " + e.getMessage(), e);
-        }
-    }
-
-    private List<Long> extraerIdsDeBomberos(List<Ciudadano> ciudadanos) {
-        if (ciudadanos == null || ciudadanos.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Long> ids = new ArrayList<>();
-        for (Ciudadano ciudadano : ciudadanos) {
-            ids.add(Long.valueOf(ciudadano.getId()));
-        }
-        return ids;
-    }
-
-    private List<Long> extraerIdsVehiculos(List<EstadoIncidente> estadoIncidentes) {
-        if (estadoIncidentes == null || estadoIncidentes.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Long> ids = new ArrayList<>();
-        for (EstadoIncidente estadoIncidente : estadoIncidentes) {
-            ids.add(Long.valueOf(estadoIncidente.getId()));
-        }
-        return ids;
-    }
-
-    private List<Long> extraerIdsRecursos(List<Recurso> recursos) {
-        if (recursos == null || recursos.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Long> ids = new ArrayList<>();
-        for (Recurso recurso: recursos) {
-            ids.add(Long.valueOf(recurso.getId()));
-        }
-        return ids;
-    }
-
 }
+
+
