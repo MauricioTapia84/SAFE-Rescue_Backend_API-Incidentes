@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
  * Proporciona endpoints para operaciones CRUD de ubicaciones
  */
 @RestController
-@RequestMapping("/api-incidente/v1/ubicaciones")
+@RequestMapping("/api-incidentes/v1/ubicaciones")
 public class UbicacionController {
 
     @Autowired

@@ -16,7 +16,7 @@ import java.util.NoSuchElementException;
  * Proporciona endpoints para operaciones CRUD de estado de Incidente.
  */
 @RestController
-@RequestMapping("/api-incidente/v1/estados-incidentes")
+@RequestMapping("/api-incidentes/v1/estados-incidentes")
 public class EstadoIncidenteController {
 
     @Autowired

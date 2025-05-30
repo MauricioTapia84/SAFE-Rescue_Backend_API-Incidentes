@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
  * Proporciona endpoints para operaciones CRUD de tipos de Incidente.
  */
 @RestController
-@RequestMapping("/api-incidente/v1/tipos-incidentes")
+@RequestMapping("/api-incidentes/v1/tipos-incidentes")
 public class TipoIncidenteController {
 
     @Autowired

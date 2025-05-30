@@ -73,11 +73,11 @@ public class EstadoIncidenteService {
                     .orElseThrow(() -> new NoSuchElementException("Equipo no encontrado"));
 
             // Actualización de campos con validación
-            if (estadoIncidente.getDetalle() != null) {
-                if (estadoIncidente.getDetalle().length() > 50) {
+            if (estadoIncidente.getNombre() != null) {
+                if (estadoIncidente.getNombre().length() > 50) {
                     throw new RuntimeException("El valor detalle excede máximo de caracteres (50)");
                 }
-                antiguoEstado.setDetalle(estadoIncidente.getDetalle());
+                antiguoEstado.setNombre(estadoIncidente.getNombre());
             }
 
             return estadoIncidenteRepository.save(antiguoEstado);
@@ -109,11 +109,11 @@ public class EstadoIncidenteService {
      * @throws RuntimeException Si alguna validación falla
      */
     public void validarEstadoIncidente(@NotNull EstadoIncidente estadoIncidente) {
-        if (estadoIncidente.getDetalle() == null || estadoIncidente.getDetalle().isEmpty()) {
+        if (estadoIncidente.getNombre() == null || estadoIncidente.getNombre().isEmpty()) {
             throw new RuntimeException("El nombre del equipo es requerido");
         }
 
-        if (estadoIncidente.getDetalle().length() > 50) {
+        if (estadoIncidente.getNombre().length() > 50) {
             throw new RuntimeException("El valor Detalle excede máximo de caracteres (50)");
         }
 

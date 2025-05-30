@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
  * Proporciona endpoints para operaciones CRUD y gestión de relaciones de incidentes
  */
 @RestController
-@RequestMapping("/api-incidente/v1/incidentes")
+@RequestMapping("/api-incidentes/v1/incidentes")
 public class IncidenteController {
 
     @Autowired

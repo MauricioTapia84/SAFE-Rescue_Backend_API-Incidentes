@@ -18,7 +18,7 @@ public class EstadoIncidente {
     private int id;
 
 
-    @Column(name = "detalle", length = 50, nullable = false)
-    private String detalle;
+    @Column(name = "nombre_estado", length = 50, nullable = false)
+    private String nombre;
 
 }
